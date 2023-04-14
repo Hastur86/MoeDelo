@@ -54,9 +54,124 @@ namespace MoeDeloRemains
         {
             //FixRemainsGoods();
 
-            FixPsnOrp("2022.01.01", "2022.12.31");
+            //FixPsnOrp("2021.01.01", "2021.12.31"); //перед использование открыть все возвраты за период для пересохранения иначе они теряют связи с орп
+            FixPsnKassa("2022.01.01", "2022.12.31");
         }
 
+        public static void FixPsnKassa(string startDate, string endDate)
+        {
+            var docs = GetKassaOperations(startDate, endDate);
+            Console.Write("Получено - " + docs.Count.ToString() + " Кассовых поступлений");
+            Console.WriteLine();
+
+            int patentParse = 0;
+            string patent = "";
+            foreach (var item in docs)
+            {
+                Console.Write(item.DocumentBaseId + " - " + item.Description);
+                switch (patentParse)
+                {
+                    case 0:
+                        patent = "7500210002546";
+                        break;
+                    case 1:
+                        patent = "7500210002546";
+                        break;
+                    case 2:
+                        patent = "7500210002546";
+                        break;
+                    case 3:
+                        patent = "7500210002558";
+                        break;
+                    case 4:
+                        patent = "7500210002560";
+                        break;
+                    case 5:
+                        patent = "7500210006223";
+                        break;
+                }
+
+                patentParse++;
+                if (patentParse > 5)
+                {
+                    patentParse = 0;
+                }
+
+                if (ChangeKassaOperation(item,patent))
+                {
+                    Console.Write(" - ПСН");
+                }
+                else
+                {
+                    Console.Write(" - ОШИБКА!");
+                }
+                Console.WriteLine();
+            }
+            Console.ReadKey();
+        }
+        public static bool ChangeKassaOperation(OperationResponseDto oper, string patent)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var curOrp = GetKassaOperation(oper.Source.Id.ToString(), oper.DocumentBaseId.ToString());
+                curOrp.СonsideredInPatents = new List<СonsideredInPatent>(new СonsideredInPatent[]{new СonsideredInPatent()
+                {
+                    PatentNumber = patent,
+                    PatentSum = curOrp.Sum-(curOrp.PayByCard.HasValue ? curOrp.PayByCard.Value : 0)
+                }});
+
+                string address = MainUrl + "/accounting/api/v1/cashier/" + oper.Source.Id + "/retailRevenue/" + oper.DocumentBaseId;
+                HttpResponseMessage responseMessage;
+
+                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("md-api-key", ApiKey);
+
+                var jsonReq = Newtonsoft.Json.JsonConvert.SerializeObject(curOrp);
+                var content = new StringContent(jsonReq.ToString(), Encoding.UTF8, "application/json");
+
+                responseMessage = httpClient.PutAsync(address, content).Result;
+                var responseText = JObject.Parse(responseMessage.Content.ReadAsStringAsync().Result);
+
+                return responseMessage.IsSuccessStatusCode;
+            }
+        }
+
+        public static RetailRevenueRepresentation GetKassaOperation(string kassaId, string id)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                var address = MainUrl + "/accounting/api/v1/cashier/" + kassaId + "/retailRevenue/" + id;
+
+                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("md-api-key", ApiKey);
+                var request = new HttpRequestMessage(HttpMethod.Get, address);
+
+                var responseMessage = httpClient.SendAsync(request).Result;
+                var responseText = JObject.Parse(responseMessage.Content.ReadAsStringAsync().Result);
+
+                var allContracts = JsonConvert.DeserializeObject<RetailRevenueRepresentation>(responseText.ToString());
+                return allContracts;
+            }
+        }
+        public static List<OperationResponseDto> GetKassaOperations(string startDate, string endDate)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                var address = MainUrl + "/money/api/v1/Registry?Limit=1000&StartDate=" + startDate + "&EndDate=" + endDate + "&TaxationSystemType=1&OperationTypes=47";
+
+                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("md-api-key", ApiKey);
+                var request = new HttpRequestMessage(HttpMethod.Get, address);
+
+                var responseMessage = httpClient.SendAsync(request).Result;
+                var responseText = JObject.Parse(responseMessage.Content.ReadAsStringAsync().Result);
+
+                var allContracts = JsonConvert.DeserializeObject<List<OperationResponseDto>>(responseText.First.First.ToString());
+                return allContracts;
+            }
+        }
         public static void FixPsnOrp(string startDate, string endDate)
         {
             var orp = GetOrp(startDate, endDate);
@@ -80,7 +195,6 @@ namespace MoeDeloRemains
 
             Console.ReadKey();
         }
-
         public static bool ChangeOrpToPsn(string id)
         {
             using (var httpClient = new HttpClient())
@@ -102,7 +216,6 @@ namespace MoeDeloRemains
                 return responseMessage.IsSuccessStatusCode;
             }
         }
-
         public static RetailReportRepresentation GetOrp(string id)
         {
             using (var httpClient = new HttpClient())
@@ -121,7 +234,6 @@ namespace MoeDeloRemains
                 return allContracts;
             }
         }
-
         public static List<RetailReportCollectionItemRepresentation> GetOrp(string startDate, string endDate)
         {
             using (var httpClient = new HttpClient())
@@ -140,7 +252,6 @@ namespace MoeDeloRemains
                 return allContracts.ResourceList;
             }
         }
-
         public static void FixRemainsGoods()
         {
             var goods = GetGoods("");
@@ -206,7 +317,6 @@ namespace MoeDeloRemains
             }
             ttns.ForEach(t => CreatTTN(t));
         }
-
         public static List<GoodRepresentation> GetGoods(string findText)
         {
             using (var httpClient = new HttpClient())
@@ -243,7 +353,6 @@ namespace MoeDeloRemains
                 return allContracts;
             }
         }
-
         public static List<GoodRemainsCollection> GetRemainsGood(int[] Ids)
         {
             using (var httpClient = new HttpClient())
@@ -288,6 +397,5 @@ namespace MoeDeloRemains
                 return responseMessage.IsSuccessStatusCode;
             }
         }
-
     }
 }

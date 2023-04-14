@@ -46,12 +46,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ORP\OperationResponseDto.cs" />
     <Compile Include="ORP\RetailReportCollectionItemRepresentation.cs" />
     <Compile Include="ORP\RetailReportItem.cs" />
     <Compile Include="ORP\RetailReportModel.cs" />
     <Compile Include="ORP\RetailReportReasonRevenue.cs" />
     <Compile Include="ORP\RetailReportRepresentation.cs" />
     <Compile Include="ORP\RetailReportRepresentationCollection.cs" />
+    <Compile Include="ORP\RetailRevenueRepresentation.cs" />
+    <Compile Include="ORP\SourceDto.cs" />
+    <Compile Include="ORP\СonsideredInPatent.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PurchasesWaybillRepresentation.cs" />

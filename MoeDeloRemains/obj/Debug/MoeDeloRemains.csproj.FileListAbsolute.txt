@@ -8,3 +8,13 @@ C:\Users\User\source\repos\MoeDeloRemains\MoeDeloRemains\obj\Debug\MoeDeloRemain
 C:\Users\User\source\repos\MoeDeloRemains\MoeDeloRemains\obj\Debug\MoeDeloRemains.csproj.CopyComplete
 C:\Users\User\source\repos\MoeDeloRemains\MoeDeloRemains\obj\Debug\MoeDeloRemains.exe
 C:\Users\User\source\repos\MoeDeloRemains\MoeDeloRemains\obj\Debug\MoeDeloRemains.pdb
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\bin\Debug\MoeDeloRemains.exe.config
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\bin\Debug\MoeDeloRemains.exe
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\bin\Debug\MoeDeloRemains.pdb
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\bin\Debug\Newtonsoft.Json.dll
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\bin\Debug\Newtonsoft.Json.xml
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.csprojAssemblyReference.cache
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.csproj.CoreCompileInputs.cache
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.csproj.CopyComplete
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.exe
+C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.pdb
