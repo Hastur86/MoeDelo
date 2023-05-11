@@ -54,8 +54,8 @@ namespace MoeDeloRemains
         {
             //FixRemainsGoods();
 
-            //FixPsnOrp("2021.01.01", "2021.12.31"); //перед использование открыть все возвраты за период для пересохранения иначе они теряют связи с орп
-            FixPsnKassa("2022.01.01", "2022.12.31");
+            FixPsnKassa("2023.01.01", "2023.03.31");
+            //FixPsnOrp("2023.01.01", "2023.03.31"); //перед использование открыть все возвраты за период для пересохранения иначе они теряют связи с орп
         }
 
         public static void FixPsnKassa(string startDate, string endDate)
@@ -72,22 +72,22 @@ namespace MoeDeloRemains
                 switch (patentParse)
                 {
                     case 0:
-                        patent = "7500210002546";
+                        patent = "7500220011204";
                         break;
                     case 1:
-                        patent = "7500210002546";
+                        patent = "7500220011204";
                         break;
                     case 2:
-                        patent = "7500210002546";
+                        patent = "7500220011204";
                         break;
                     case 3:
-                        patent = "7500210002558";
+                        patent = "7500220011361";
                         break;
                     case 4:
-                        patent = "7500210002560";
+                        patent = "7500220011355";
                         break;
                     case 5:
-                        patent = "7500210006223";
+                        patent = "7500220011204";
                         break;
                 }
 
