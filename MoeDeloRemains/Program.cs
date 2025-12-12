@@ -125,7 +125,7 @@ namespace MoeDeloRemains
                         Console.WriteLine(string.Format("  {0} - {1} - {2} - {3:N2} руб.",
                             op.Date.ToString("dd.MM.yyyy"),
                             op.Number,
-                            op.ContragentName,
+                            op.Contractor.Name,
                             op.Sum));
                     }
                 }
