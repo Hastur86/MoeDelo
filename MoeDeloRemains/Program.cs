@@ -6,7 +6,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using MoeDeloRemains.DTO.Mony;
 using MoeDeloRemains.ORP;
+using MoeDeloRemains.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -52,12 +54,91 @@ namespace MoeDeloRemains
 
         static void Main(string[] args)
         {
+
+            GetStatement();
             //FixRemainsGoods();
 
-            FixPsnKassa("2023.01.01", "2023.03.31");
-            //FixPsnOrp("2023.01.01", "2023.03.31"); //перед использование открыть все возвраты за период для пересохранения иначе они теряют связи с орп
+            //FixPsnKassa("2023.01.01", "2023.03.31");
+            //FixPsnOrp("2023.04.01", "2023.06.30"); //перед использование открыть все возвраты за период для пересохранения иначе они теряют связи с орп
         }
 
+        public static void GetStatement()
+        {
+            try
+            {
+                Console.WriteLine("=== Сервис получения банковской выписки ===");
+
+                // Настройки (используем ваш API ключ из примера)
+                string apiKey = "544cc416-8f6c-4e4e-9732-89faeb7e156b";
+                string storagePath = @"C:\1\MoeDeloStatements";
+
+                // Создаем сервис
+                BankStatementService statementService = new BankStatementService(apiKey, storagePath: storagePath);
+
+                // Получаем информацию о существующей выписке
+                StatementMetadata existingInfo = statementService.GetStatementInfo();
+                if (existingInfo != null)
+                {
+                    Console.WriteLine("\nНайдена существующая выписка:");
+                    Console.WriteLine(string.Format("  Период: с {0} по {1}",
+                        existingInfo.FirstOperationDate.ToString("dd.MM.yyyy"),
+                        existingInfo.LastOperationDate.ToString("dd.MM.yyyy")));
+                    Console.WriteLine(string.Format("  Операций: {0}", existingInfo.OperationCount));
+                    Console.WriteLine(string.Format("  Последнее обновление: {0}",
+                        existingInfo.LastUpdated.ToString("dd.MM.yyyy HH:mm")));
+                }
+                else
+                {
+                    Console.WriteLine("\nСуществующая выписка не найдена. Будет создана новая.");
+                }
+
+                // Получаем выписку за последний год
+                Console.WriteLine("\nЗапрашиваем выписку за последний год...");
+                var operations = statementService.GetBankStatement(1);
+
+                // Выводим статистику
+                Console.WriteLine("\n=== Результат ===");
+                Console.WriteLine(string.Format("Всего операций: {0}", operations.Count));
+
+                if (operations.Count > 0)
+                {
+                    DateTime firstDate = operations[0].Date;
+                    DateTime lastDate = operations[operations.Count - 1].Date;
+
+                    decimal totalAmount = 0;
+                    foreach (var op in operations)
+                    {
+                        totalAmount += op.Sum;
+                    }
+
+                    Console.WriteLine(string.Format("Период: с {0} по {1}",
+                        firstDate.ToString("dd.MM.yyyy"),
+                        lastDate.ToString("dd.MM.yyyy")));
+                    Console.WriteLine(string.Format("Общая сумма списаний: {0:N2} руб.", totalAmount));
+
+                    // Вывод последних 5 операций
+                    Console.WriteLine("\nПоследние 5 операций:");
+                    int startIndex = Math.Max(0, operations.Count - 5);
+                    for (int i = startIndex; i < operations.Count; i++)
+                    {
+                        var op = operations[i];
+                        Console.WriteLine(string.Format("  {0} - {1} - {2} - {3:N2} руб.",
+                            op.Date.ToString("dd.MM.yyyy"),
+                            op.Number,
+                            op.ContragentName,
+                            op.Sum));
+                    }
+                }
+
+                Console.WriteLine("\nНажмите любую клавишу для выхода...");
+                Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(string.Format("\nОшибка: {0}", ex.Message));
+                Console.ReadKey();
+            }
+        }
         public static void FixPsnKassa(string startDate, string endDate)
         {
             var docs = GetKassaOperations(startDate, endDate);
@@ -135,7 +216,6 @@ namespace MoeDeloRemains
                 return responseMessage.IsSuccessStatusCode;
             }
         }
-
         public static RetailRevenueRepresentation GetKassaOperation(string kassaId, string id)
         {
             using (var httpClient = new HttpClient())
@@ -366,7 +446,7 @@ namespace MoeDeloRemains
                 ProductRemainsRequest request = new ProductRemainsRequest()
                 {
                     Ids = Ids,
-                    MaxDate = "2022-12-31"
+                    MaxDate = "2023-12-31"
                 };
 
                 var jsonReq = Newtonsoft.Json.JsonConvert.SerializeObject(request);

@@ -15,7 +15,7 @@ namespace MoeDeloRemains
         public int TaxationSystemType { get; set; }
         public PurchasesWaybillRepresentation()
         {
-            DocDate = "2022-11-30";
+            DocDate = "2023-12-01";
             NdsPositionType = 1;
             DiscrepancyNumberOrQuality = false;
             KontragentId = 21221433;
