@@ -66,6 +66,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PurchasesWaybillRepresentation.cs" />
     <Compile Include="PurchasesWaybillItemRepresentation.cs" />
+    <Compile Include="Services\BankStatementDateService.cs" />
+    <Compile Include="Services\BankStatementFileService.cs" />
     <Compile Include="Services\BankStatementService.cs" />
     <Compile Include="Utils\SslHelper.cs" />
   </ItemGroup>
