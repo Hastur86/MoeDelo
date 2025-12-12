@@ -47,11 +47,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DTO\ContractorDto.cs" />
     <Compile Include="DTO\Mony\BankOperationDto.cs" />
     <Compile Include="DTO\Mony\DocumentBaseDto.cs" />
     <Compile Include="DTO\Mony\RegistryApiResponse.cs" />
     <Compile Include="DTO\Mony\RegistryRequestDto.cs" />
     <Compile Include="DTO\Mony\StatementMetadata.cs" />
+    <Compile Include="DTO\SourceDto.cs" />
     <Compile Include="ORP\OperationResponseDto.cs" />
     <Compile Include="ORP\RetailReportCollectionItemRepresentation.cs" />
     <Compile Include="ORP\RetailReportItem.cs" />
