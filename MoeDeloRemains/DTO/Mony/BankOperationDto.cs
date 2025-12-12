@@ -29,8 +29,10 @@ namespace MoeDeloRemains.DTO.Mony
         /// <summary>
         /// Контрагент
         /// </summary>
-        [JsonProperty("ContragentName")]
-        public string ContragentName { get; set; }
+        [JsonProperty("Contractor")]
+        public ContractorDto Contractor { get; set; }
+
+        public SourceDto Source { get; set; }
 
         /// <summary>
         /// Назначение платежа

@@ -21,35 +21,28 @@ namespace MoeDeloRemains.Services
     {
         private readonly string _apiKey;
         private readonly string _baseUrl;
-        private readonly string _storagePath;
-
-        private const string StatementFileName = "bank_statement.json";
-        private const string MetadataFileName = "statement_metadata.json";
+        private readonly BankStatementFileService _fileService;
+        private readonly BankStatementDateService _dateService;
 
         /// <summary>
         /// Конструктор сервиса
         /// </summary>
-        public BankStatementService(string apiKey, string baseUrl = "https://restapi.moedelo.org", string storagePath = null)
+        public BankStatementService(string apiKey, string baseUrl = "https://restapi.moedelo.org",
+                                   string storagePath = null)
         {
             if (string.IsNullOrEmpty(apiKey))
                 throw new ArgumentNullException("apiKey");
 
             _apiKey = apiKey;
             _baseUrl = baseUrl.TrimEnd('/');
-            _storagePath = storagePath ?? Directory.GetCurrentDirectory();
+            _fileService = new BankStatementFileService(storagePath);
+            _dateService = new BankStatementDateService();
 
             // Инициализируем SSL настройки
             SslHelper.InitializeSslSettings();
 
-            // Создаем директорию, если она не существует
-            if (!Directory.Exists(_storagePath))
-            {
-                Directory.CreateDirectory(_storagePath);
-            }
-
             Console.WriteLine("Сервис инициализирован");
             Console.WriteLine("Базовый URL: " + _baseUrl);
-            Console.WriteLine("Путь сохранения: " + _storagePath);
         }
 
         /// <summary>
@@ -61,35 +54,36 @@ namespace MoeDeloRemains.Services
             {
                 Console.WriteLine(string.Format("Начало получения выписки за {0} год(а)", periodInYears));
 
-                // Определяем период
-                DateTime endDate = DateTime.Now;
-                DateTime startDate = endDate.AddYears(-periodInYears);
+                // Определяем период для запроса
+                var period = _dateService.GetNewStatementPeriod(periodInYears);
+                DateTime startDate = period.Item1;
+                DateTime endDate = period.Item2;
 
                 Console.WriteLine(string.Format("Период запроса: с {0} по {1}",
                     startDate.ToString("yyyy-MM-dd"),
                     endDate.ToString("yyyy-MM-dd")));
 
-                // Пути к файлам
-                string statementFilePath = Path.Combine(_storagePath, StatementFileName);
-                string metadataFilePath = Path.Combine(_storagePath, MetadataFileName);
-
                 // Проверяем существование файлов
-                bool statementExists = File.Exists(statementFilePath);
-                bool metadataExists = File.Exists(metadataFilePath);
+                bool statementExists = _fileService.StatementFilesExist();
 
-                if (!statementExists || !metadataExists)
+                if (!statementExists)
                 {
                     Console.WriteLine("Файлы выписки не найдены. Создаем новые...");
-                    return CreateNewStatementFile(startDate, endDate, statementFilePath, metadataFilePath);
+                    return CreateNewStatementFile(startDate, endDate);
                 }
 
                 // Загружаем существующие данные
-                var existingData = LoadExistingStatement(statementFilePath, metadataFilePath);
+                var existingData = _fileService.LoadExistingStatement();
                 StatementMetadata metadata = existingData.Item1;
                 List<BankOperationDto> existingOperations = existingData.Item2;
 
+                Console.WriteLine(string.Format("Загружены существующие данные: {0} операций с {1} по {2}",
+                    existingOperations.Count,
+                    metadata.FirstOperationDate.ToString("yyyy-MM-dd"),
+                    metadata.LastOperationDate.ToString("yyyy-MM-dd")));
+
                 // Определяем дату начала для обновления
-                DateTime updateStartDate = GetUpdateStartDate(metadata.LastOperationDate, startDate);
+                DateTime updateStartDate = _dateService.GetUpdateStartDate(metadata.LastOperationDate, startDate);
                 Console.WriteLine(string.Format("Дата начала для обновления: {0}", updateStartDate.ToString("yyyy-MM-dd")));
 
                 // Получаем операции для обновления
@@ -98,17 +92,20 @@ namespace MoeDeloRemains.Services
                 if (operationsToAdd.Count == 0)
                 {
                     Console.WriteLine("Новых операций для добавления не найдено");
-                    return FilterOperationsByDate(existingOperations, startDate, endDate);
+                    return _dateService.FilterOperationsByDate(existingOperations, startDate, endDate);
                 }
 
-                // Объединяем и обновляем данные
-                List<BankOperationDto> updatedOperations = MergeAndUpdateOperations(existingOperations, operationsToAdd, startDate);
+                // Объединяем и обновляем данные (устраняем дубликаты)
+                List<BankOperationDto> updatedOperations = _dateService.MergeAndUpdateOperations(
+                    existingOperations, operationsToAdd, startDate);
 
                 // Сохраняем обновленные данные
-                SaveStatementToFile(updatedOperations, statementFilePath, metadataFilePath, startDate, endDate);
+                _fileService.SaveStatementToFile(updatedOperations, startDate, endDate);
 
                 Console.WriteLine(string.Format("Выписка успешно обновлена. Всего операций: {0}", updatedOperations.Count));
-                return updatedOperations;
+
+                // Возвращаем отфильтрованные по запрошенному периоду операции
+                return _dateService.FilterOperationsByDate(updatedOperations, startDate, endDate);
             }
             catch (Exception ex)
             {
@@ -121,8 +118,7 @@ namespace MoeDeloRemains.Services
         /// <summary>
         /// Создание нового файла выписки
         /// </summary>
-        private List<BankOperationDto> CreateNewStatementFile(DateTime startDate, DateTime endDate,
-                                                              string statementPath, string metadataPath)
+        private List<BankOperationDto> CreateNewStatementFile(DateTime startDate, DateTime endDate)
         {
             Console.WriteLine("Запрашиваем все операции за указанный период...");
             List<BankOperationDto> operations = GetOperationsFromApi(startDate, endDate);
@@ -133,7 +129,7 @@ namespace MoeDeloRemains.Services
                 return new List<BankOperationDto>();
             }
 
-            SaveStatementToFile(operations, statementPath, metadataPath, startDate, endDate);
+            _fileService.SaveStatementToFile(operations, startDate, endDate);
             Console.WriteLine(string.Format("Новый файл выписки создан. Операций: {0}", operations.Count));
 
             return operations;
@@ -162,7 +158,7 @@ namespace MoeDeloRemains.Services
                 {
                     try
                     {
-                        operations = GetOperationsPage(startDate, endDate, currentPage, 1000, (currentPage-1) * 1000);
+                        operations = GetOperationsPage(startDate, endDate, currentPage, 1000, (currentPage - 1) * 1000);
                         success = true;
                     }
                     catch (WebException webEx)
@@ -217,7 +213,7 @@ namespace MoeDeloRemains.Services
             {
                 // Формируем URL запроса
                 string url = string.Format(
-                    "{0}/money/api/v1/Registry?StartDate={1}&EndDate={2}&OperationSource=1&OperationType=16&Limit={3}&Offset={4}",
+                    "{0}/money/api/v1/Registry?StartDate={1}&EndDate={2}&OperationSource=1&OperationType=102&Limit={3}&Offset={4}",
                     _baseUrl,
                     startDate.ToString("yyyy.MM.dd"),
                     endDate.ToString("yyyy.MM.dd"),
@@ -289,6 +285,7 @@ namespace MoeDeloRemains.Services
                 throw;
             }
         }
+
         /// <summary>
         /// Парсинг ответа API
         /// </summary>
@@ -332,178 +329,13 @@ namespace MoeDeloRemains.Services
                 return new List<BankOperationDto>();
             }
         }
-        /// <summary>
-        /// Загрузка существующих данных из файлов
-        /// </summary>
-        private Tuple<StatementMetadata, List<BankOperationDto>> LoadExistingStatement(string statementPath, string metadataPath)
-        {
-            // Загружаем метаданные
-            string metadataJson = File.ReadAllText(metadataPath);
-            StatementMetadata metadata = JsonConvert.DeserializeObject<StatementMetadata>(metadataJson);
-
-            // Загружаем операции
-            string operationsJson = File.ReadAllText(statementPath);
-            List<BankOperationDto> operations = JsonConvert.DeserializeObject<List<BankOperationDto>>(operationsJson);
-
-            Console.WriteLine(string.Format("Загружены существующие данные: {0} операций с {1} по {2}",
-                operations.Count,
-                metadata.FirstOperationDate.ToString("yyyy-MM-dd"),
-                metadata.LastOperationDate.ToString("yyyy-MM-dd")));
-
-            return Tuple.Create(metadata, operations);
-        }
-
-        /// <summary>
-        /// Определение даты начала для обновления
-        /// </summary>
-        private DateTime GetUpdateStartDate(DateTime lastOperationDate, DateTime requestedStartDate)
-        {
-            // Берем более раннюю дату
-            DateTime twoWeeksAgo = lastOperationDate.AddDays(-14);
-            return twoWeeksAgo < requestedStartDate ? twoWeeksAgo : requestedStartDate;
-        }
-
-        /// <summary>
-        /// Объединение и обновление операций
-        /// </summary>
-        private List<BankOperationDto> MergeAndUpdateOperations(List<BankOperationDto> existingOperations,
-                                                                List<BankOperationDto> newOperations,
-                                                                DateTime startDate)
-        {
-            // Создаем словарь существующих операций
-            Dictionary<long, BankOperationDto> existingDict = new Dictionary<long, BankOperationDto>();
-            foreach (var op in existingOperations)
-            {
-                existingDict[op.Id] = op;
-            }
-
-            // Добавляем/обновляем операции
-            foreach (var newOp in newOperations)
-            {
-                if (existingDict.ContainsKey(newOp.Id))
-                {
-                    existingDict[newOp.Id] = newOp;
-                }
-                else
-                {
-                    existingDict[newOp.Id] = newOp;
-                }
-            }
-
-            // Преобразуем обратно в список
-            List<BankOperationDto> updatedList = new List<BankOperationDto>();
-            foreach (var kvp in existingDict)
-            {
-                updatedList.Add(kvp.Value);
-            }
-
-            // Удаляем операции старше startDate
-            updatedList.RemoveAll(delegate (BankOperationDto op) { return op.Date < startDate; });
-
-            // Сортируем по дате
-            updatedList.Sort(delegate (BankOperationDto a, BankOperationDto b) {
-                return a.Date.CompareTo(b.Date);
-            });
-
-            return updatedList;
-        }
-
-        /// <summary>
-        /// Фильтрация операций по дате
-        /// </summary>
-        private List<BankOperationDto> FilterOperationsByDate(List<BankOperationDto> operations, DateTime startDate, DateTime endDate)
-        {
-            List<BankOperationDto> result = new List<BankOperationDto>();
-
-            foreach (var op in operations)
-            {
-                if (op.Date >= startDate && op.Date <= endDate)
-                {
-                    result.Add(op);
-                }
-            }
-
-            result.Sort(delegate (BankOperationDto a, BankOperationDto b) {
-                return a.Date.CompareTo(b.Date);
-            });
-
-            return result;
-        }
-
-        /// <summary>
-        /// Сохранение выписки в файл
-        /// </summary>
-        private void SaveStatementToFile(List<BankOperationDto> operations, string statementPath,
-                                         string metadataPath, DateTime startDate, DateTime endDate)
-        {
-            if (operations.Count == 0)
-            {
-                Console.WriteLine("Нет операций для сохранения");
-                return;
-            }
-
-            // Сортируем операции по дате
-            operations.Sort(delegate (BankOperationDto a, BankOperationDto b) {
-                return a.Date.CompareTo(b.Date);
-            });
-
-            // Создаем метаданные
-            StatementMetadata metadata = new StatementMetadata
-            {
-                FirstOperationDate = operations[0].Date,
-                LastOperationDate = operations[operations.Count - 1].Date,
-                OperationCount = operations.Count,
-                LastUpdated = DateTime.Now,
-                ContentHash = CalculateContentHash(operations)
-            };
-
-            // Сериализуем данные
-            string statementJson = JsonConvert.SerializeObject(operations, Formatting.Indented);
-            string metadataJson = JsonConvert.SerializeObject(metadata, Formatting.Indented);
-
-            // Сохраняем в файлы
-            File.WriteAllText(statementPath, statementJson);
-            File.WriteAllText(metadataPath, metadataJson);
-
-            Console.WriteLine("Данные сохранены в файлы:");
-            Console.WriteLine(string.Format("  - Операции: {0}", statementPath));
-            Console.WriteLine(string.Format("  - Метаданные: {0}", metadataPath));
-        }
-
-        /// <summary>
-        /// Расчет MD5 хеша
-        /// </summary>
-        private string CalculateContentHash(List<BankOperationDto> operations)
-        {
-            string json = JsonConvert.SerializeObject(operations);
-            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-            {
-                byte[] inputBytes = Encoding.UTF8.GetBytes(json);
-                byte[] hashBytes = md5.ComputeHash(inputBytes);
-
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    sb.Append(hashBytes[i].ToString("x2"));
-                }
-                return sb.ToString();
-            }
-        }
 
         /// <summary>
         /// Получение информации о файле выписки
         /// </summary>
         public StatementMetadata GetStatementInfo()
         {
-            string metadataPath = Path.Combine(_storagePath, MetadataFileName);
-
-            if (!File.Exists(metadataPath))
-            {
-                return null;
-            }
-
-            string metadataJson = File.ReadAllText(metadataPath);
-            return JsonConvert.DeserializeObject<StatementMetadata>(metadataJson);
+            return _fileService.GetStatementInfo();
         }
     }
 }
