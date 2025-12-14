@@ -18,3 +18,13 @@ C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.csproj.Co
 C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.csproj.CopyComplete
 C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.exe
 C:\Users\User\gitrepos\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.pdb
+D:\Repository\MoeDelo\MoeDeloRemains\bin\Debug\MoeDeloRemains.exe.config
+D:\Repository\MoeDelo\MoeDeloRemains\bin\Debug\MoeDeloRemains.exe
+D:\Repository\MoeDelo\MoeDeloRemains\bin\Debug\MoeDeloRemains.pdb
+D:\Repository\MoeDelo\MoeDeloRemains\bin\Debug\Newtonsoft.Json.dll
+D:\Repository\MoeDelo\MoeDeloRemains\bin\Debug\Newtonsoft.Json.xml
+D:\Repository\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.csprojAssemblyReference.cache
+D:\Repository\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.csproj.CoreCompileInputs.cache
+D:\Repository\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.csproj.CopyComplete
+D:\Repository\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.exe
+D:\Repository\MoeDelo\MoeDeloRemains\obj\Debug\MoeDeloRemains.pdb
