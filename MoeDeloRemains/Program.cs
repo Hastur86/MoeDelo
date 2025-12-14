@@ -54,14 +54,55 @@ namespace MoeDeloRemains
 
         static void Main(string[] args)
         {
+            GetBills();
+            //GetStatement();
 
-            GetStatement();
+
             //FixRemainsGoods();
 
             //FixPsnKassa("2023.01.01", "2023.03.31");
             //FixPsnOrp("2023.04.01", "2023.06.30"); //перед использование открыть все возвраты за период для пересохранения иначе они теряют связи с орп
         }
 
+        public static void GetBills()
+        {
+            try
+            {
+                // Ваш API ключ
+                string apiKey = ApiKey;
+                string storagePath = @"C:\1\MoeDeloStatements\bills";
+
+                // Создаем сервис счетов
+                var billService = new BillService(apiKey, storagePath: storagePath);
+
+                // Получаем счета за последний год
+                Console.WriteLine("Получаем счета за последний год...");
+                var bills = billService.GetBillsLastYear();
+
+                // Выводим результат
+                Console.WriteLine($"\nВсего получено счетов: {bills.Count}");
+
+                if (bills.Count > 0)
+                {
+                    Console.WriteLine("\nПримеры счетов:");
+                    for (int i = 0; i < Math.Min(5, bills.Count); i++)
+                    {
+                        var bill = bills[i];
+                        Console.WriteLine($"{i + 1}. Счет №{bill.Number} от {bill.Date:dd.MM.yyyy} - {bill.ContractorName} - {bill.TotalSum} {bill.Currency}");
+                    }
+                }
+
+                // Информация о файле
+                Console.WriteLine("\n" + billService.GetFileInfo());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Критическая ошибка: " + ex.Message);
+            }
+
+            Console.WriteLine("\nНажмите любую клавишу для выхода...");
+            Console.ReadKey();
+        }
         public static void GetStatement()
         {
             try
@@ -115,19 +156,6 @@ namespace MoeDeloRemains
                         firstDate.ToString("dd.MM.yyyy"),
                         lastDate.ToString("dd.MM.yyyy")));
                     Console.WriteLine(string.Format("Общая сумма списаний: {0:N2} руб.", totalAmount));
-
-                    // Вывод последних 5 операций
-                    Console.WriteLine("\nПоследние 5 операций:");
-                    int startIndex = Math.Max(0, operations.Count - 5);
-                    for (int i = startIndex; i < operations.Count; i++)
-                    {
-                        var op = operations[i];
-                        Console.WriteLine(string.Format("  {0} - {1} - {2} - {3:N2} руб.",
-                            op.Date.ToString("dd.MM.yyyy"),
-                            op.Number,
-                            op.Contractor.Name,
-                            op.Sum));
-                    }
                 }
 
                 Console.WriteLine("\nНажмите любую клавишу для выхода...");
