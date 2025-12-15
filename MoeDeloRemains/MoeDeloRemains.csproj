@@ -47,6 +47,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DTO\Accounting\BillApiResponse.cs" />
+    <Compile Include="DTO\Accounting\BillApiWrapperResponse.cs" />
+    <Compile Include="DTO\Accounting\BillDto.cs" />
     <Compile Include="DTO\ContractorDto.cs" />
     <Compile Include="DTO\Mony\BankOperationDto.cs" />
     <Compile Include="DTO\Mony\DocumentBaseDto.cs" />
@@ -71,6 +74,8 @@
     <Compile Include="Services\BankStatementDateService.cs" />
     <Compile Include="Services\BankStatementFileService.cs" />
     <Compile Include="Services\BankStatementService.cs" />
+    <Compile Include="Services\BillFileService.cs" />
+    <Compile Include="Services\BillService.cs" />
     <Compile Include="Utils\SslHelper.cs" />
   </ItemGroup>
   <ItemGroup>
