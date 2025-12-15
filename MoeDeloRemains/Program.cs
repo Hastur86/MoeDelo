@@ -11,6 +11,7 @@ using MoeDeloRemains.ORP;
 using MoeDeloRemains.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using MoeDeloRemains.Services.Contragents;
 
 namespace MoeDeloRemains
 {
@@ -54,7 +55,8 @@ namespace MoeDeloRemains
 
         static void Main(string[] args)
         {
-            GetBills();
+
+            //GetBills();
             //GetStatement();
 
 
@@ -63,7 +65,60 @@ namespace MoeDeloRemains
             //FixPsnKassa("2023.01.01", "2023.03.31");
             //FixPsnOrp("2023.04.01", "2023.06.30"); //перед использование открыть все возвраты за период для пересохранения иначе они теряют связи с орп
         }
+        public static void GetContragents()
+        {
+            try
+            {
+                // Путь к файлу выписки (созданному BankStatementService)
+                string statementFilePath = @"D:\1\bank_statement.json";
 
+                Console.WriteLine("=== Сервис загрузки контрагентов из выписки ===");
+
+                // Создаем сервис контрагентов
+                var contragentService = new ContragentService(
+                    apiKey: ApiKey,
+                    storagePath: @"d:\1" // опционально
+                );
+
+                // Получаем контрагентов из выписки
+                var operationsWithContragents = contragentService.GetContragentsFromStatement(statementFilePath);
+
+                // Выводим статистику
+                Console.WriteLine("\n=== Результаты обработки ===");
+                Console.WriteLine($"Всего операций: {operationsWithContragents.Count}");
+
+                int withContragent = 0;
+                int withoutContragent = 0;
+
+                foreach (var operation in operationsWithContragents)
+                {
+                    if (operation.ContragentLoaded && operation.Contragent != null)
+                    {
+                        withContragent++;
+                    }
+                    else
+                    {
+                        withoutContragent++;
+                    }
+                }
+
+                Console.WriteLine($"Операций с загруженными контрагентами: {withContragent}");
+                Console.WriteLine($"Операций без контрагентов: {withoutContragent}");
+
+                // Получаем всех контрагентов из кэша
+                var allContragents = contragentService.GetAllCachedContragents();
+                Console.WriteLine($"\nВсего контрагентов в кэше: {allContragents.Count}");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Критическая ошибка: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+
+            Console.WriteLine("\nНажмите любую клавишу для выхода...");
+            Console.ReadKey();
+        }
         public static void GetBills()
         {
             try

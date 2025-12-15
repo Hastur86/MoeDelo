@@ -51,6 +51,10 @@
     <Compile Include="DTO\Accounting\BillApiWrapperResponse.cs" />
     <Compile Include="DTO\Accounting\BillDto.cs" />
     <Compile Include="DTO\ContractorDto.cs" />
+    <Compile Include="DTO\Contragents\BankOperationWithContragentDto.cs" />
+    <Compile Include="DTO\Contragents\ContactInfoDto.cs" />
+    <Compile Include="DTO\Contragents\ContragentApiResponse.cs" />
+    <Compile Include="DTO\Contragents\ContragentDto.cs" />
     <Compile Include="DTO\Mony\BankOperationDto.cs" />
     <Compile Include="DTO\Mony\DocumentBaseDto.cs" />
     <Compile Include="DTO\Mony\RegistryApiResponse.cs" />
@@ -76,6 +80,8 @@
     <Compile Include="Services\BankStatementService.cs" />
     <Compile Include="Services\BillFileService.cs" />
     <Compile Include="Services\BillService.cs" />
+    <Compile Include="Services\Contragents\ContragentFileService.cs" />
+    <Compile Include="Services\Contragents\ContragentService.cs" />
     <Compile Include="Utils\SslHelper.cs" />
   </ItemGroup>
   <ItemGroup>
