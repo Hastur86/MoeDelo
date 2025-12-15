@@ -55,8 +55,9 @@ namespace MoeDeloRemains
 
         static void Main(string[] args)
         {
+            FullBill();
             //GetContragents();
-            GetBills();
+            //GetBills();
             //GetStatement();
 
 
@@ -64,6 +65,26 @@ namespace MoeDeloRemains
 
             //FixPsnKassa("2023.01.01", "2023.03.31");
             //FixPsnOrp("2023.04.01", "2023.06.30"); //перед использование открыть все возвраты за период для пересохранения иначе они теряют связи с орп
+        }
+
+        public static void FullBill()
+        {
+            // Инициализация сервисов
+            var billService = new BillService(ApiKey);
+            var contragentService = new ContragentService(ApiKey);
+            var enrichmentService = new BillEnrichmentService(ApiKey, billService, contragentService, @"d:\1");
+
+            // Сначала получаем счета за последний год (если еще не получали)
+            Console.WriteLine("Шаг 1: Получение счетов...");
+           // var bills = billService.GetBillsLastYear();
+
+            // Затем обогащаем счета данными контрагентов
+            Console.WriteLine("\nШаг 2: Обогащение счетов данными контрагентов...");
+            var enrichedBills = enrichmentService.GetEnrichedBills();
+
+            // Результат
+            Console.WriteLine($"\nИтог: Получено {enrichedBills.Count} обогащенных счетов");
+            Console.ReadKey();
         }
         public static void GetContragents()
         {

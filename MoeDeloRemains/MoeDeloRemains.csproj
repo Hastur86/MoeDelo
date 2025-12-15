@@ -49,7 +49,9 @@
   <ItemGroup>
     <Compile Include="DTO\Accounting\BillApiResponse.cs" />
     <Compile Include="DTO\Accounting\BillApiWrapperResponse.cs" />
+    <Compile Include="DTO\Accounting\BillDetailDto.cs" />
     <Compile Include="DTO\Accounting\BillDto.cs" />
+    <Compile Include="DTO\Accounting\EnrichedBillDto.cs" />
     <Compile Include="DTO\ContractorDto.cs" />
     <Compile Include="DTO\Contragents\BankOperationWithContragentDto.cs" />
     <Compile Include="DTO\Contragents\ContactInfoDto.cs" />
@@ -78,6 +80,8 @@
     <Compile Include="Services\BankStatementDateService.cs" />
     <Compile Include="Services\BankStatementFileService.cs" />
     <Compile Include="Services\BankStatementService.cs" />
+    <Compile Include="Services\BillEnrichmentFileService.cs" />
+    <Compile Include="Services\BillEnrichmentService.cs" />
     <Compile Include="Services\BillFileService.cs" />
     <Compile Include="Services\BillService.cs" />
     <Compile Include="Services\Contragents\ContragentFileService.cs" />
