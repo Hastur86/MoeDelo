@@ -55,8 +55,8 @@ namespace MoeDeloRemains
 
         static void Main(string[] args)
         {
-
-            //GetBills();
+            //GetContragents();
+            GetBills();
             //GetStatement();
 
 
@@ -125,7 +125,7 @@ namespace MoeDeloRemains
             {
                 // Ваш API ключ
                 string apiKey = ApiKey;
-                string storagePath = @"C:\1\MoeDeloStatements\bills";
+                string storagePath = @"d:\1";
 
                 // Создаем сервис счетов
                 var billService = new BillService(apiKey, storagePath: storagePath);
@@ -136,16 +136,6 @@ namespace MoeDeloRemains
 
                 // Выводим результат
                 Console.WriteLine($"\nВсего получено счетов: {bills.Count}");
-
-                if (bills.Count > 0)
-                {
-                    Console.WriteLine("\nПримеры счетов:");
-                    for (int i = 0; i < Math.Min(5, bills.Count); i++)
-                    {
-                        var bill = bills[i];
-                        Console.WriteLine($"{i + 1}. Счет №{bill.Number} от {bill.Date:dd.MM.yyyy} - {bill.ContractorName} - {bill.TotalSum} {bill.Currency}");
-                    }
-                }
 
                 // Информация о файле
                 Console.WriteLine("\n" + billService.GetFileInfo());
